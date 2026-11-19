@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stall Sales Tally</title>
+<style>
+  :root{
+    --bg:#FFF7E6; --card:#FFFFFF; --ink:#2D1B0E;
+    --orange:#FF7A1A; --teal:#00B8A9; --pink:#FF4E88; --yellow:#FFC93C;
+    --green:#3EC46D; --purple:#7C5CFF; --red:#E63946;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--ink);
+    background-image:radial-gradient(#FFD9A8 1.5px, transparent 1.5px);
+    background-size:26px 26px;
+  }
+  header{
+    background:linear-gradient(120deg,var(--orange),var(--pink) 55%,var(--purple));
+    color:#fff; padding:26px 18px 22px; text-align:center;
+    border-bottom-left-radius:28px; border-bottom-right-radius:28px;
+    box-shadow:0 4px 14px rgba(255,122,26,.35);
+  }
+  header h1{font-size:clamp(1.6rem,4vw,2.3rem);letter-spacing:.5px}
+  header p{margin-top:6px;font-size:1rem;opacity:.95}
+  main{max-width:820px;margin:0 auto;padding:18px 14px 60px}
+  section{margin-top:22px}
+  h2{
+    display:flex;align-items:center;gap:10px;
+    font-size:clamp(1.2rem,3vw,1.5rem);margin-bottom:12px;
+  }
+  .badge{
+    width:38px;height:38px;border-radius:12px;display:inline-flex;
+    align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex:none;
+  }
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:18px;
+    box-shadow:0 3px 10px rgba(45,27,14,.10);
+  }
+
+  /* Section 1: Sales Tally */
+  .items{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .item{
+    border-radius:var(--radius);padding:16px;color:#fff;cursor:pointer;
+    border:none;text-align:left;font-family:inherit;
+    box-shadow:0 4px 10px rgba(45,27,14,.18);
+    transition:transform .08s ease;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .item:active{transform:scale(.96)}
+  .item .name{font-size:1.2rem;font-weight:700}
+  .item .price{font-size:1rem;opacity:.95}
+  .item .count{font-size:1.05rem;font-weight:700;background:rgba(255,255,255,.25);
+    border-radius:999px;padding:4px 12px;align-self:flex-start}
+  .item .hint{font-size:.85rem;opacity:.9}
+  .tally-note{margin-top:12px;font-size:.95rem;text-align:center;color:#7a5b3f}
+
+  /* Section 2: Summary */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+  .stat{border-radius:var(--radius);padding:14px;color:#fff;text-align:center}
+  .stat .label{font-size:.85rem;text-transform:uppercase;letter-spacing:1px;opacity:.95}
+  .stat .value{font-size:1.6rem;font-weight:800;margin-top:4px}
+  .rankers{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .ranker{border-radius:var(--radius);padding:14px;color:#fff}
+  .ranker .who{font-size:1.3rem;font-weight:800;margin-top:4px}
+  .ranker .detail{font-size:.95rem;opacity:.95;margin-top:2px}
+  @media(max-width:480px){.rankers{grid-template-columns:1fr}}
+
+  /* Section 3: Feedback & details */
+  .two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+  @media(max-width:640px){.two-col{grid-template-columns:1fr}}
+  label{display:block;font-weight:700;margin:12px 0 6px;font-size:.95rem}
+  textarea,input[type=email]{
+    width:100%;border:2px solid #E8D9C3;border-radius:12px;padding:10px 12px;
+    font-family:inherit;font-size:1rem;resize:vertical;background:#FFFCF5;
+  }
+  textarea:focus,input:focus{outline:none;border-color:var(--teal)}
+  .stars{display:flex;gap:6px;font-size:2rem;cursor:pointer;user-select:none}
+  .stars span{color:#D8CBB6;transition:transform .1s}
+  .stars span.on{color:var(--yellow)}
+  .stars span:hover{transform:scale(1.15)}
+  .btn{
+    margin-top:14px;background:var(--teal);color:#fff;border:none;cursor:pointer;
+    font-family:inherit;font-size:1.05rem;font-weight:700;padding:12px 22px;
+    border-radius:999px;box-shadow:0 3px 8px rgba(0,184,169,.35);
+  }
+  .btn:active{transform:scale(.97)}
+  .fb-list{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+  .fb{
+    background:#FFFCF5;border:2px solid #F2E4CB;border-radius:14px;padding:12px 14px;
+  }
+  .fb .fb-stars{color:var(--yellow);font-size:1.1rem;letter-spacing:2px}
+  .fb .fb-msg{margin-top:4px;font-size:1rem}
+  .fb .fb-time{margin-top:4px;font-size:.8rem;color:#9a7f5f}
+  .fb .fb-name{font-weight:700}
+  .empty-fb{color:#9a7f5f;font-size:.95rem;font-style:italic}
+  .contacts{display:flex;flex-direction:column;gap:10px}
+  .contact{
+    display:flex;align-items:center;gap:10px;background:#FFFCF5;
+    border:2px solid #F2E4CB;border-radius:12px;padding:10px 12px;
+    text-decoration:none;color:var(--ink);font-weight:600;font-size:.95rem;
+    word-break:break-all;
+  }
+  .contact:hover{border-color:var(--teal)}
+  .contact .ico{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;
+    justify-content:center;color:#fff;font-size:1rem;flex:none}
+  .loc{margin-top:12px;background:#E6F7F1;border:2px solid #BDEDE0;border-radius:12px;padding:12px}
+  .loc .loc-title{font-weight:800;color:#00795F;font-size:.9rem;text-transform:uppercase;letter-spacing:1px}
+  .loc p{margin-top:4px;font-size:.95rem}
+  .sub{font-size:.9rem;color:#7a5b3f;margin-bottom:4px}
+  footer{text-align:center;color:#9a7f5f;font-size:.85rem;padding:10px}
+
+  /* Admin dashboard */
+  .admin-row{
+    display:grid;grid-template-columns:1.4fr .8fr .7fr auto;gap:8px;align-items:center;
+    background:#FFFCF5;border:2px solid #F2E4CB;border-radius:12px;padding:10px;margin-top:10px;
+  }
+  .admin-row input{
+    width:100%;border:2px solid #E8D9C3;border-radius:9px;padding:8px 10px;
+    font-family:inherit;font-size:.95rem;background:#fff;
+  }
+  .admin-row input:focus{outline:none;border-color:var(--teal)}
+  .admin-head{font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#7a5b3f;margin-top:14px}
+  .admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn-small{
+    background:var(--purple);color:#fff;border:none;cursor:pointer;font-family:inherit;
+    font-size:.9rem;font-weight:700;padding:8px 14px;border-radius:999px;
+  }
+  .btn-danger{background:var(--red)}
+  .btn-add{background:var(--green)}
+  .btn-save{background:var(--teal)}
+  .admin-note{margin-top:10px;font-size:.9rem;color:#00795F;font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <h1>🥙 Stall Sales Tally</h1>
+  <p>Tap sales fast · track totals · hear from customers</p>
+</header>
+
+<main>
+  <!-- 1. SALES TALLY -->
+  <section id="tally">
+    <h2><span class="badge" style="background:var(--orange)">🧾</span> Sales Tally</h2>
+    <div class="card">
+      <p class="sub">Tap an item to add one sale. Counts update instantly — nothing is saved, so this resets when you leave.</p>
+      <div class="items" id="items"></div>
+      <p class="tally-note" id="tallyNote">Tap a button above to record a sale 👆</p>
+    </div>
+  </section>
+
+  <!-- ADMIN DASHBOARD -->
+  <section id="admin">
+    <h2><span class="badge" style="background:var(--purple)">🛠️</span> Admin</h2>
+    <div class="card">
+      <p class="sub">Stall owner dashboard — edit each product's name, price, and sold count, and set the Sales Summary figures below. Changes apply immediately. (No password protection for now; nothing is saved between visits.)</p>
+      <div id="adminRows"></div>
+      <div class="admin-actions" style="margin-top:14px">
+        <button class="btn-small btn-add" id="adminAdd">➕ Add Product</button>
+        <button class="btn-small btn-save" id="adminApply">✅ Apply Changes</button>
+        <button class="btn-small" id="adminReset">🔄 Reset Demo Data</button>
+      </div>
+      <p class="admin-note" id="adminNote"></p>
+      <div class="admin-head" style="margin-top:18px">Sales Input Data</div>
+      <p class="sub" style="margin-top:6px">Type any values for the Sales Summary and press Apply — all four figures show exactly what you enter. Tap-button sales then add on top of Today's Total and Daily Items live.</p>
+      <div class="admin-row" style="grid-template-columns:1.2fr 1fr 1fr 1fr 1fr auto">
+        <span class="admin-head" style="margin:0">Figure</span>
+        <span class="admin-head" style="margin:0">Today Total (RM)</span>
+        <span class="admin-head" style="margin:0">Daily Items</span>
+        <span class="admin-head" style="margin:0">Monthly (RM)</span>
+        <span class="admin-head" style="margin:0">Yearly (RM)</span>
+        <span></span>
+      </div>
+      <div class="admin-row" style="grid-template-columns:1.2fr 1fr 1fr 1fr 1fr auto">
+        <span style="font-weight:700">Sales summary values</span>
+        <input type="number" step="0.01" min="0" id="baseToday" aria-label="Today total (RM)">
+        <input type="number" step="1" min="0" id="baseDaily" aria-label="Daily items">
+        <input type="number" step="0.01" min="0" id="baseMonth" aria-label="Monthly sales (RM)">
+        <input type="number" step="0.01" min="0" id="baseYear" aria-label="Yearly sales (RM)">
+        <button class="btn-small btn-save" id="baseApply">✅ Apply</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. SALES SUMMARY -->
+  <section id="summary">
+    <h2><span class="badge" style="background:var(--teal)">📊</span> Sales Summary</h2>
+    <div class="card">
+      <p class="sub">Running totals for today, this month, and this year — plus your best and slowest sellers. (Demo figures start from sample sales.)</p>
+      <div class="stats">
+        <div class="stat" style="background:var(--orange)">
+          <div class="label">Today's Total</div><div class="value" id="stToday">RM 0.00</div>
+        </div>
+        <div class="stat" style="background:var(--green)">
+          <div class="label">Daily Sales</div><div class="value" id="stDaily">0</div>
+        </div>
+        <div class="stat" style="background:var(--purple)">
+          <div class="label">Monthly Sales</div><div class="value" id="stMonth">RM 0.00</div>
+        </div>
+        <div class="stat" style="background:var(--pink)">
+          <div class="label">Yearly Sales</div><div class="value" id="stYear">RM 0.00</div>
+        </div>
+      </div>
+      <div class="rankers">
+        <div class="ranker" style="background:var(--green)">
+          <div class="label">🏆 Best Seller</div>
+          <div class="who" id="bestName">—</div>
+          <div class="detail" id="bestDetail">No sales yet</div>
+        </div>
+        <div class="ranker" style="background:var(--red)">
+          <div class="label">🐢 Lowest Seller</div>
+          <div class="who" id="lowName">—</div>
+          <div class="detail" id="lowDetail">No sales yet</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. FEEDBACK & STALL DETAILS -->
+  <section id="feedback">
+    <h2><span class="badge" style="background:var(--pink)">💬</span> Customer Feedback &amp; Stall Details</h2>
+    <div class="two-col">
+      <div class="card">
+        <p class="sub">Leave a rating and a message — it appears right here on screen (not saved anywhere).</p>
+        <label>How was your food? ⭐</label>
+        <div class="stars" id="stars">
+          <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span>
+          <span data-v="4">★</span><span data-v="5">★</span>
+        </div>
+        <label for="fbName">Your name (optional)</label>
+        <input type="email" id="fbName" placeholder="e.g. Aisyah" style="display:block">
+        <label for="fbMsg">Your message</label>
+        <textarea id="fbMsg" rows="3" placeholder="Tell us what you loved (or what to fix)!"></textarea>
+        <button class="btn" id="fbSend">Submit Feedback</button>
+        <div class="fb-list" id="fbList"></div>
+      </div>
+      <div class="card">
+        <p class="sub">Find us or get in touch:</p>
+        <div class="contacts">
+          <a class="contact" href="mailto:hello@warongmatnusantara.my">
+            <span class="ico" style="background:var(--orange)">✉️</span>
+            hello@warongmatnusantara.my
+          </a>
+          <a class="contact" href="https://instagram.com/warongmatnusantara" target="_blank" rel="noopener">
+            <span class="ico" style="background:var(--pink)">📸</span>
+            @warongmatnusantara
+          </a>
+          <a class="contact" href="https://tiktok.com/@warongmatnusantara" target="_blank" rel="noopener">
+            <span class="ico" style="background:var(--ink)">🎵</span>
+            @warongmatnusantara on TikTok
+          </a>
+          <a class="contact" href="https://facebook.com/warongmatnusantara" target="_blank" rel="noopener">
+            <span class="ico" style="background:#1877F2">👍</span>
+            Warong Mat Nusantara on Facebook
+          </a>
+        </div>
+        <div class="loc">
+          <div class="loc-title">📍 Stall Location</div>
+          <p><strong>Warong Mat Nusantara</strong><br>          Lot 17, Jalan Pasar Malam,<br>
+          Taman Sri Muda, 40400 Shah Alam,<br>
+          Selangor, Malaysia</p>
+          <p style="margin-top:6px;">Open Tue–Sun · 11:00am – 9:00pm · Closed Mondays</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer>Stall Sales Tally — demo app. All data is sample data and resets on reload.</footer>
+
+<script>
+(function(){
+  "use strict";
+  // ---- Sample data (Malaysia-specific) ----
+  var items = [
+    {name:"Perfume Minyak Atar", price:20.00, color:"var(--orange)",  sales:0},
+    {name:"Teh Ais Limau",   price:2.50, color:"var(--teal)",    sales:0},
+    {name:"Roti Canai",      price:2.00, color:"var(--purple)",  sales:0}
+  ];
+
+  // Seed: a few sales already recorded today so the app never opens blank
+  var seed = [15, 9, 6];
+  seed.forEach(function(n, i){ items[i].sales = n; });
+
+  var monthBase = 2480.00; // sample month-to-date total before today
+  var yearBase  = 21500.00; // sample year-to-date total before this month
+
+  var fmt = function(n){ return "RM " + n.toFixed(2); };
+  var el = function(id){ return document.getElementById(id); };
+
+  // Reset-to defaults used by the Admin "Reset Demo Data" button
+  var defaults = [
+    ["Perfume Minyak Atar", 20.00, "var(--orange)", 15],
+    ["Teh Ais Limau",        2.50, "var(--teal)",    9],
+    ["Roti Canai",           2.00, "var(--purple)",  6]
+  ];
+
+  // ---- Section 1: render item buttons ----
+  var itemsBox = el("items");
+  var buttons = [];
+  items.forEach(function(item, i){
+    var b = document.createElement("button");
+    b.className = "item";
+    b.style.background = item.color;
+    b.innerHTML =
+      '<span class="count" id="count'+i+'">'+item.sales+' sold</span>' +
+      '<span class="name">'+item.name+'</span>' +
+      '<span class="price">'+fmt(item.price)+' each</span>' +
+      '<span class="hint">Tap to add one sale ➕</span>';
+    b.addEventListener("click", function(){ addSale(i); });
+    itemsBox.appendChild(b);
+    buttons.push(b);
+  });
+
+  function addSale(i){
+    items[i].sales++;
+    el("count"+i).textContent = items[i].sales + " sold";
+    var note = el("tallyNote");
+    note.textContent = "✅ Added 1 × " + items[i].name + " (" + fmt(items[i].price) + ")";
+    updateSummary();
+  }
+
+  // ---- Admin dashboard ----
+  var adminRows = el("adminRows");
+  var adminNote = el("adminNote");
+
+  function renderAdmin(){
+    adminRows.innerHTML = "";
+    var head = document.createElement("div");
+    head.className = "admin-head";
+    head.textContent = "Products";
+    adminRows.appendChild(head);
+    items.forEach(function(item, i){
+      var row = document.createElement("div");
+      row.className = "admin-row";
+      row.innerHTML =
+        '<input type="text" data-f="name" data-i="'+i+'" value="'+item.name.replace(/"/g,"&quot;")+'" aria-label="Product name">' +
+        '<input type="number" step="0.10" min="0" data-f="price" data-i="'+i+'" value="'+item.price.toFixed(2)+'" aria-label="Price (RM)">' +
+        '<input type="number" step="1" min="0" data-f="sales" data-i="'+i+'" value="'+item.sales+'" aria-label="Sold count">' +
+        '<button class="btn-small btn-danger" data-del="'+i+'" aria-label="Remove product">🗑️</button>';
+      adminRows.appendChild(row);
+    });
+    Array.prototype.forEach.call(adminRows.querySelectorAll("[data-del]"), function(btn){
+      btn.addEventListener("click", function(){
+        items.splice(parseInt(btn.dataset.del, 10), 1);
+        rebuildTally();
+        renderAdmin();
+        updateSummary();
+        note("🗑️ Product removed.");
+      });
+    });
+  }
+
+  function note(msg){ adminNote.textContent = msg; }
+
+  function rebuildTally(){
+    itemsBox.innerHTML = "";
+    buttons.length = 0;
+    items.forEach(function(item, i){
+      var b = document.createElement("button");
+      b.className = "item";
+      b.style.background = item.color;
+      b.innerHTML =
+        '<span class="count" id="count'+i+'">'+item.sales+' sold</span>' +
+        '<span class="name">'+item.name.replace(/</g,"&lt;")+'</span>' +
+        '<span class="price">'+fmt(item.price)+' each</span>' +
+        '<span class="hint">Tap to add one sale ➕</span>';
+      b.addEventListener("click", function(){ addSale(i); });
+      itemsBox.appendChild(b);
+      buttons.push(b);
+    });
+    var note2 = el("tallyNote");
+    note2.textContent = "Tap a button above to record a sale 👆";
+  }
+
+  el("adminApply").addEventListener("click", function(){
+    var inputs = adminRows.querySelectorAll("input[data-f]");
+    var seen = {};
+    inputs.forEach(function(inp){
+      var i = parseInt(inp.dataset.i, 10);
+      if(!items[i]) return;
+      var v = inp.value.trim();
+      if(inp.dataset.f === "name"){
+        if(v) items[i].name = v;
+      } else if(inp.dataset.f === "price"){
+        var p = parseFloat(v);
+        items[i].price = isNaN(p) || p < 0 ? 0 : p;
+      } else {
+        var s = parseInt(v, 10);
+        items[i].sales = isNaN(s) || s < 0 ? 0 : s;
+      }
+      seen[i] = true;
+    });
+    rebuildTally();
+    updateSummary();
+    renderAdmin();
+    note("✅ Changes applied — Sales Tally and Summary updated.");
+  });
+
+  var palette = ["var(--orange)","var(--teal)","var(--purple)","var(--pink)","var(--green)"];
+  el("adminAdd").addEventListener("click", function(){
+    items.push({name:"New Product", price:5.00, color:palette[items.length % palette.length], sales:0});
+    rebuildTally();
+    renderAdmin();
+    updateSummary();
+    note("➕ Product added — give it a name and price, then Apply Changes.");
+  });
+
+  el("adminReset").addEventListener("click", function(){
+    items.length = 0;
+    defaults.forEach(function(d){ items.push({name:d[0], price:d[1], color:d[2], sales:d[3]}); });
+    manualToday = null;
+    manualDaily = null;
+    monthBase = 2480.00;
+    yearBase = 21500.00;
+    tapRevenueAtSet = 0;
+    tapUnitsAtSet = 0;
+    renderBases();
+    rebuildTally();
+    renderAdmin();
+    updateSummary();
+    note("🔄 Demo data restored — products and summary values reset.");
+  });
+
+  renderAdmin();
+
+  // ---- Section 2: summary ----
+  // Manual values set from Sales Input Data (null = not set, derive from taps/bases)
+  var manualToday = null, manualDaily = null;
+  var tapRevenueAtSet = 0, tapUnitsAtSet = 0; // tap totals when manual values were set
+  function tapRevenue(){
+    var r = 0;
+    items.forEach(function(it){ r += it.sales * it.price; });
+    return r;
+  }
+  function tapUnits(){
+    var u = 0;
+    items.forEach(function(it){ u += it.sales; });
+    return u;
+  }
+  function updateSummary(){
+    var tr = tapRevenue(), tu = tapUnits();
+    var todayRevenue = manualToday === null ? tr : manualToday + (tr - tapRevenueAtSet);
+    var totalUnits    = manualDaily  === null ? tu : manualDaily  + (tu - tapUnitsAtSet);
+    el("stToday").textContent = fmt(todayRevenue);
+    el("stDaily").textContent = totalUnits + " items";
+    el("stMonth").textContent = fmt(monthBase + todayRevenue);
+    el("stYear").textContent  = fmt(yearBase + monthBase + todayRevenue);
+    var best = null, low = null;
+    items.forEach(function(it){
+      if(!best || it.sales > best.sales) best = it;
+      if(!low || it.sales < low.sales) low = it;
+    });
+    if(items.length > 0 && best && low){
+      el("bestName").textContent = best.name;
+      el("bestDetail").textContent = best.sales + " sold · " + fmt(best.sales * best.price);
+      el("lowName").textContent = low.name;
+      el("lowDetail").textContent = low.sales + " sold · " + fmt(low.sales * low.price);
+    }
+  }
+
+  // ---- Sales Input Data: editable summary values ----
+  var baseTodayInput = el("baseToday");
+  var baseDailyInput = el("baseDaily");
+  var baseMonthInput = el("baseMonth");
+  var baseYearInput = el("baseYear");
+  function renderBases(){
+    baseTodayInput.value = (manualToday === null ? tapRevenue() : manualToday).toFixed(2);
+    baseDailyInput.value = (manualDaily === null ? tapUnits() : manualDaily);
+    baseMonthInput.value = monthBase.toFixed(2);
+    baseYearInput.value = yearBase.toFixed(2);
+  }
+  el("baseApply").addEventListener("click", function(){
+    var t = parseFloat(baseTodayInput.value);
+    var d = parseInt(baseDailyInput.value, 10);
+    var m = parseFloat(baseMonthInput.value);
+    var y = parseFloat(baseYearInput.value);
+    manualToday = isNaN(t) || t < 0 ? 0 : t;
+    manualDaily = isNaN(d) || d < 0 ? 0 : d;
+    monthBase = isNaN(m) || m < 0 ? 0 : m;
+    yearBase  = isNaN(y) || y < 0 ? 0 : y;
+    tapRevenueAtSet = tapRevenue();
+    tapUnitsAtSet = tapUnits();
+    updateSummary();
+    note("✅ Summary values applied — all four figures updated. New taps add on top.");
+  });
+  renderBases();
+  updateSummary();
+
+  // ---- Section 3: feedback ----
+  var rating = 0;
+  var starEls = Array.prototype.slice.call(el("stars").children);
+  starEls.forEach(function(s){
+    s.addEventListener("click", function(){
+      rating = parseInt(s.dataset.v, 10);
+      starEls.forEach(function(x, idx){ x.classList.toggle("on", idx < rating); });
+    });
+  });
+
+  var fbList = el("fbList");
+  // Seed feedback so the area is never empty
+  var seededFeedback = [
+    {stars:5, name:"Aisyah",  msg:"The Perfume Minyak Atar scent lasts all day! Will come again 🌸", when:"today, 1:05pm"},
+    {stars:4, name:"Kumar",   msg:"Teh Ais Limau was refreshing. Roti canai could be crispier.", when:"today, 12:20pm"},
+    {stars:5, name:"Farah",   msg:"Friendly abang and fast service even during lunch rush.", when:"yesterday, 8:40pm"}
+  ];
+  function renderFeedback(fb){
+    var d = document.createElement("div");
+    d.className = "fb";
+    var starsText = "★★★★★".slice(0, fb.stars) + "☆☆☆☆☆".slice(0, 5 - fb.stars);
+    d.innerHTML =
+      '<div class="fb-stars">' + starsText + '</div>' +
+      '<div class="fb-msg">' + fb.msg.replace(/</g,"&lt;").replace(/>/g,"&gt;") + '</div>' +
+      '<div class="fb-time">' + (fb.name ? '<span class="fb-name">— ' + fb.name.replace(/</g,"&lt;") + '</span>, ' : "") + fb.when + '</div>';
+    fbList.appendChild(d);
+  }
+  seededFeedback.forEach(renderFeedback);
+
+  el("fbSend").addEventListener("click", function(){
+    var msg = el("fbMsg").value.trim();
+    var name = el("fbName").value.trim();
+    if(rating === 0){ alert("Please pick a star rating first ⭐"); return; }
+    if(!msg){ alert("Please write a short message 📝"); return; }
+    var now = new Date();
+    var h = now.getHours(), m = now.getMinutes();
+    var ampm = h >= 12 ? "pm" : "am";
+    var h12 = ((h + 11) % 12) + 1;
+    renderFeedback({stars:rating, name:name, msg:msg, when:"just now · " + h12 + ":" + (m<10?"0":"")+m + ampm});
+    el("fbMsg").value = "";
+    el("fbName").value = "";
+    rating = 0;
+    starEls.forEach(function(x){ x.classList.remove("on"); });
+    var done = document.createElement("p");
+    done.className = "sub";
+    done.style.marginTop = "8px";
+    done.textContent = "✅ Thanks! Your feedback is now on screen above.";
+    fbList.appendChild(done);
+  });
+})();
+</script>
+</body>
+</html>
